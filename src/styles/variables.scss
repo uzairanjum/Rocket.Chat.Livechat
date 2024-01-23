@@ -1,7 +1,13 @@
-$font-family: 'Helvetica Neue', arial, sans-serif;
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap");
+
+// $font-family: "Helvetica Neue", arial, sans-serif;
+
+$font-family: "Plus Jakarta Sans", sans-serif;
 
 $default-border: 2px;
 $default-border-radius: 2px;
+
+$border-rounded-xl: 12px;
 
 $form-item-height: 44px;
 $form-item-height-small: 30px;
