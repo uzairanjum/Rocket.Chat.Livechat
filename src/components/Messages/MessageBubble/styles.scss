@@ -2,9 +2,11 @@
 @import '../../../styles/variables';
 
 $message-bubble-padding: 12px;
-$message-bubble-background-color: $bg-color-light;
+// $message-bubble-background-color: $bg-color-light;
+$message-bubble-background-color: $bg-color-grey;
 $message-bubble-color: $color-text-dark;
-$message-bubble-border-radius: $default-border-radius;
+// $message-bubble-border-radius: $default-border-radius;
+$message-bubble-border-radius: $border-rounded-md;
 $message-bubble-link-color: $color-blue;
 $message-bubble-me-background-color: $color-blue;
 $message-bubble-me-color: $color-text-lighter;
@@ -39,7 +41,8 @@ $message-bubble-quoted-indicator-color: $color-green;
 
 	&--inverse {
 		color: var(--font-color, $message-bubble-me-color);
-		background-color: var(--color, $message-bubble-me-background-color);
+		// background-color: var(--color, $message-bubble-me-background-color);
+		background-color: $primary-color-lighter;
 
 		a {
 			color: var(--font-color, $message-bubble-me-link-color);
