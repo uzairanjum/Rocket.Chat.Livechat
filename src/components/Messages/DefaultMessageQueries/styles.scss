@@ -1,4 +1,5 @@
 @import "../../../styles/colors";
+@import "../../../styles/variables.scss";
 
 .queries-wrapper {
 	height: 100%;
@@ -26,9 +27,10 @@
 		color: #ffffff;
 		border: none;
 		padding: 16px;
-		border-radius: 8px;
+		border-radius: $border-rounded-xl;
 		width: 100%;
 		font-family: inherit;
+		font-weight: 500;
 		cursor: pointer;
 		transition: all 150ms ease-in-out;
 		&:hover {
