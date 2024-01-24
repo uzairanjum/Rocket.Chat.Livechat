@@ -26,8 +26,8 @@ $composer-input-placeholder-color: $color-text-light;
 
 	transition: all $default-time-animation;
 
-	border: $composer-border-width solid $composer-border-color;
-	border-radius: $composer-border-radius;
+	border: 1px solid $composer-border-color;
+	border-radius: 10px;
 	background-color: $composer-background-color;
 	align-items: flex-end;
 

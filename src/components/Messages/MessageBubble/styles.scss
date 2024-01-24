@@ -1,12 +1,12 @@
 @import "../../../styles/colors";
 @import "../../../styles/variables";
 
-$message-bubble-padding: 12px;
+$message-bubble-padding: 10px;
 // $message-bubble-background-color: $bg-color-light;
 $message-bubble-background-color: $bg-color-grey;
 $message-bubble-color: $color-text-dark;
 // $message-bubble-border-radius: $default-border-radius;
-$message-bubble-border-radius: $border-rounded-xl;
+$message-bubble-border-radius: 10px;
 $message-bubble-link-color: $color-blue;
 $message-bubble-me-background-color: $color-blue;
 $message-bubble-me-color: $color-text-lighter;
