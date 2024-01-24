@@ -1,18 +1,23 @@
-import i18next from 'i18next';
-import { route } from 'preact-router';
+import i18next from "i18next";
+import { route } from "preact-router";
 
-import { Livechat } from '../api';
-import { CallStatus, isCallOngoing } from '../components/Calls/CallStatus';
-import { setCookies, upsert, canRenderMessage, parse } from '../components/helpers';
-import { store, initialState } from '../store';
-import { normalizeAgent } from './api';
-import Commands from './commands';
-import constants from './constants';
-import { loadConfig, processUnread } from './main';
-import { parentCall } from './parentCall';
-import { createToken } from './random';
-import { normalizeMessage, normalizeMessages } from './threads';
-import { handleTranscript } from './transcript';
+import { Livechat } from "../api";
+import { CallStatus, isCallOngoing } from "../components/Calls/CallStatus";
+import {
+	setCookies,
+	upsert,
+	canRenderMessage,
+	parse,
+} from "../components/helpers";
+import { store, initialState } from "../store";
+import { normalizeAgent } from "./api";
+import Commands from "./commands";
+import constants from "./constants";
+import { loadConfig, processUnread } from "./main";
+import { parentCall } from "./parentCall";
+import { createToken } from "./random";
+import { normalizeMessage, normalizeMessages } from "./threads";
+import { handleTranscript } from "./transcript";
 
 const commands = new Commands();
 
@@ -21,17 +26,19 @@ export const closeChat = async ({ transcriptRequested } = {}) => {
 		await handleTranscript();
 	}
 
-	const { config: { settings: { clearLocalStorageWhenChatEnded } = {} } = {} } = store.state;
+	const { config: { settings: { clearLocalStorageWhenChatEnded } = {} } = {} } =
+		store.state;
 
 	if (clearLocalStorageWhenChatEnded) {
 		// exclude UI-affecting flags
-		const { minimized, visible, undocked, expanded, businessUnit, ...initial } = initialState();
+		const { minimized, visible, undocked, expanded, businessUnit, ...initial } =
+			initialState();
 		await store.setState(initial);
 	}
 
 	await loadConfig();
-	parentCall('callback', 'chat-ended');
-	route('/chat-finished');
+	parentCall("callback", "chat-ended");
+	route("/chat-finished");
 };
 
 // TODO: use a separate event to listen to call start event. Listening on the message type isn't a good solution
@@ -46,7 +53,10 @@ export const processIncomingCallMessage = async (message) => {
 				rid: message.rid,
 				time: message.ts,
 				callId: message._id,
-				url: message.t === constants.jitsiCallStartedMessageType ? message.customFields.jitsiCallUrl : '',
+				url:
+					message.t === constants.jitsiCallStartedMessageType
+						? message.customFields.jitsiCallUrl
+						: "",
 			},
 			ongoingCall: {
 				callStatus: CallStatus.RINGING,
@@ -55,19 +65,30 @@ export const processIncomingCallMessage = async (message) => {
 		});
 	} catch (err) {
 		console.error(err);
-		const alert = { id: createToken(), children: i18next.t('error_getting_call_alert'), error: true, timeout: 5000 };
+		const alert = {
+			id: createToken(),
+			children: i18next.t("error_getting_call_alert"),
+			error: true,
+			timeout: 5000,
+		};
 		await store.setState({ alerts: (alerts.push(alert), alerts) });
 	}
 };
 
 const processMessage = async (message) => {
-	if (message.t === 'livechat-close') {
+	if (message.t === "livechat-close") {
 		closeChat(message);
-	} else if (message.t === 'command') {
+	} else if (message.t === "command") {
 		commands[message.msg] && commands[message.msg]();
 	} else if (message.webRtcCallEndTs) {
-		await store.setState({ ongoingCall: { callStatus: CallStatus.ENDED, time: message.ts }, incomingCallAlert: null });
-	} else if (message.t === constants.webRTCCallStartedMessageType || message.t === constants.jitsiCallStartedMessageType) {
+		await store.setState({
+			ongoingCall: { callStatus: CallStatus.ENDED, time: message.ts },
+			incomingCallAlert: null,
+		});
+	} else if (
+		message.t === constants.webRTCCallStartedMessageType ||
+		message.t === constants.jitsiCallStartedMessageType
+	) {
 		await processIncomingCallMessage(message);
 	}
 };
@@ -92,7 +113,12 @@ export const initRoom = async () => {
 
 	Livechat.unsubscribeAll();
 
-	const { token, agent, queueInfo, room: { _id: rid, servedBy } } = state;
+	const {
+		token,
+		agent,
+		queueInfo,
+		room: { _id: rid, servedBy },
+	} = state;
 	Livechat.subscribeRoom(rid);
 
 	let roomAgent = agent;
@@ -100,28 +126,28 @@ export const initRoom = async () => {
 		if (servedBy) {
 			roomAgent = await Livechat.agent({ rid });
 			await store.setState({ agent: roomAgent, queueInfo: null });
-			parentCall('callback', ['assign-agent', normalizeAgent(roomAgent)]);
+			parentCall("callback", ["assign-agent", normalizeAgent(roomAgent)]);
 		}
 	}
 
 	if (queueInfo) {
-		parentCall('callback', ['queue-position-change', queueInfo]);
+		parentCall("callback", ["queue-position-change", queueInfo]);
 	}
 
 	Livechat.onAgentChange(rid, async (agent) => {
 		await store.setState({ agent, queueInfo: null });
-		parentCall('callback', ['assign-agent', normalizeAgent(agent)]);
+		parentCall("callback", ["assign-agent", normalizeAgent(agent)]);
 	});
 
 	Livechat.onAgentStatusChange(rid, (status) => {
 		const { agent } = store.state;
 		agent && store.setState({ agent: { ...agent, status } });
-		parentCall('callback', ['agent-status-change', normalizeAgent(agent)]);
+		parentCall("callback", ["agent-status-change", normalizeAgent(agent)]);
 	});
 
 	Livechat.onQueuePositionChange(rid, async (queueInfo) => {
 		await store.setState({ queueInfo });
-		parentCall('callback', ['queue-position-change', queueInfo]);
+		parentCall("callback", ["queue-position-change", queueInfo]);
 	});
 
 	setCookies(rid, token);
@@ -135,7 +161,13 @@ const isAgentHidden = () => {
 
 const transformAgentInformationOnMessage = (message) => {
 	const { user } = store.state;
-	if (message && user && message.u && message.u._id !== user._id && isAgentHidden()) {
+	if (
+		message &&
+		user &&
+		message.u &&
+		message.u._id !== user._id &&
+		isAgentHidden()
+	) {
 		return { ...message, u: { _id: message.u._id } };
 	}
 
@@ -164,6 +196,12 @@ Livechat.onTyping((username, isTyping) => {
 });
 
 Livechat.onMessage(async (message) => {
+	console.log("message", message);
+	if (message.u.username !== "gepeto") {
+		await store.setState({ typing: ["gepeto"] });
+	} else {
+		await store.setState({ typing: [] });
+	}
 	if (message.ts instanceof Date) {
 		message.ts = message.ts.toISOString();
 	}
@@ -178,7 +216,12 @@ Livechat.onMessage(async (message) => {
 	message.msg = parse(message.msg);
 
 	await store.setState({
-		messages: upsert(store.state.messages, message, ({ _id }) => _id === message._id, ({ ts }) => ts),
+		messages: upsert(
+			store.state.messages,
+			message,
+			({ _id }) => _id === message._id,
+			({ ts }) => ts
+		),
 	});
 
 	await processMessage(message);
@@ -195,24 +238,42 @@ Livechat.onMessage(async (message) => {
 	await doPlaySound(message);
 });
 
-export const getGreetingMessages = (messages) => messages && messages.filter((msg) => msg.trigger);
-export const getLatestCallMessage = (messages) => messages && messages.filter((msg) => msg.t === constants.webRTCCallStartedMessageType || msg.t === constants.jitsiCallStartedMessageType).pop();
+export const getGreetingMessages = (messages) =>
+	messages && messages.filter((msg) => msg.trigger);
+export const getLatestCallMessage = (messages) =>
+	messages &&
+	messages
+		.filter(
+			(msg) =>
+				msg.t === constants.webRTCCallStartedMessageType ||
+				msg.t === constants.jitsiCallStartedMessageType
+		)
+		.pop();
 
 export const loadMessages = async () => {
 	const { ongoingCall } = store.state;
 
-	const { messages: storedMessages, room: { _id: rid, callStatus } = {} } = store.state;
+	const { messages: storedMessages, room: { _id: rid, callStatus } = {} } =
+		store.state;
 	const previousMessages = getGreetingMessages(storedMessages);
 	if (!rid) {
 		return;
 	}
 
 	await store.setState({ loading: true });
-	const rawMessages = (await Livechat.loadMessages(rid)).concat(previousMessages);
-	const messages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage);
+	const rawMessages = (await Livechat.loadMessages(rid)).concat(
+		previousMessages
+	);
+	const messages = (await normalizeMessages(rawMessages)).map(
+		transformAgentInformationOnMessage
+	);
 
 	await initRoom();
-	await store.setState({ messages: (messages || []).reverse(), noMoreMessages: false, loading: false });
+	await store.setState({
+		messages: (messages || []).reverse(),
+		noMoreMessages: false,
+		loading: false,
+	});
 
 	if (messages && messages.length) {
 		const lastMessage = messages[messages.length - 1];
@@ -235,8 +296,7 @@ export const loadMessages = async () => {
 			},
 			incomingCallAlert: {
 				show: false,
-				callProvider:
-				latestCallMessage.t,
+				callProvider: latestCallMessage.t,
 				url: latestCallMessage.customFields.jitsiCallUrl,
 			},
 		});
@@ -263,7 +323,11 @@ export const loadMessages = async () => {
 };
 
 export const loadMoreMessages = async () => {
-	const { room: { _id: rid } = {}, messages = [], noMoreMessages = false } = store.state;
+	const {
+		room: { _id: rid } = {},
+		messages = [],
+		noMoreMessages = false,
+	} = store.state;
 
 	if (!rid || noMoreMessages) {
 		return;
@@ -271,8 +335,12 @@ export const loadMoreMessages = async () => {
 
 	await store.setState({ loading: true });
 
-	const rawMessages = await Livechat.loadMessages(rid, { limit: messages.length + 10 });
-	const moreMessages = (await normalizeMessages(rawMessages)).map(transformAgentInformationOnMessage);
+	const rawMessages = await Livechat.loadMessages(rid, {
+		limit: messages.length + 10,
+	});
+	const moreMessages = (await normalizeMessages(rawMessages)).map(
+		transformAgentInformationOnMessage
+	);
 
 	await store.setState({
 		messages: (moreMessages || []).reverse(),
@@ -292,10 +360,10 @@ export const defaultRoomParams = () => {
 	return params;
 };
 
-store.on('change', ([state, prevState]) => {
+store.on("change", ([state, prevState]) => {
 	// Cross-tab communication
 	// Detects when a room is created and then route to the correct container
 	if (!prevState.room && state.room) {
-		route('/');
+		route("/");
 	}
 });
