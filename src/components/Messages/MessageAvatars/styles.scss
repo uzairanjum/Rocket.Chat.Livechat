@@ -9,7 +9,8 @@
 
 	&__avatar {
 		margin: 0 -5px;
-
+		border-radius: 50%;
+		overflow: hidden;
 		box-shadow: -2px 0 1px 0 #00000082;
 
 		&:first-child {
